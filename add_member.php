@@ -83,7 +83,6 @@ $result = mysqli_query($con,"SELECT MAX(maxplayers) FROM Games");
 $row    = mysqli_fetch_array($result);
 
 echo "<form action=\"default.php\" method=\"get\">";
-echo "<input type=\"hidden\" name=\"data\" value='". $_GET["data"] ."'>";
 echo "Switch table to number of players:<br><select name=\"playerstable\">";
 for ($c_i=2;$c_i<=$row['MAX(maxplayers)'];$c_i++)
 {
@@ -129,7 +128,7 @@ if (mysqli_connect_errno())
 
 if(isset($_GET["playerstable"]))
 {
-	$stmt = mysqli_prepare($con,"SELECT (SUM(Rankings.rank)) AS \"TotalRank\", Rankings.gamename FROM Rankings WHERE Rankings.numberofplayers=? AND Rankings.rank!=0 GROUP BY Rankings.gamename ORDER BY Rankings.rank");
+	$stmt = mysqli_prepare($con,"SELECT (SUM(Rankings.rank)) AS \"TotalRank\", Rankings.gamename FROM Rankings WHERE Rankings.numberofplayers=? AND Rankings.rank!=0 GROUP BY Rankings.gamename ORDER BY TotalRank");
     mysqli_stmt_bind_param($stmt,'i',$_GET["playerstable"]);
 	mysqli_stmt_execute($stmt);
     
@@ -156,11 +155,11 @@ else
     {
     $c_j=2;
     }
-  $stmt = mysqli_prepare($con,"SELECT (SUM(Rankings.rank)) AS \"TotalRank\", Rankings.gamename FROM Rankings WHERE Rankings.numberofplayers=".$c_j." AND Rankings.rank!=0".$membernamestr." GROUP BY Rankings.gamename ORDER BY Rankings.rank");
+  $stmt = mysqli_prepare($con,"SELECT (SUM(Rankings.rank)) AS \"TotalRank\", Rankings.gamename FROM Rankings WHERE Rankings.numberofplayers=".$c_j." AND Rankings.rank!=0".$membernamestr." GROUP BY Rankings.gamename ORDER BY TotalRank");
   mysqli_stmt_execute($stmt);
     
   mysqli_stmt_bind_result($stmt,$col1,$col2);
-  $playerstable=2;
+  $playerstable=$c_j;
   }
 
 echo "<table width=\"50%\" border=\"1\">
