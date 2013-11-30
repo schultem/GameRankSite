@@ -99,16 +99,21 @@ else
   if(isset($_POST['membernamecheckbox']))
   {
   $membernamestr .=" AND (";
+  $c_j = 0;
   foreach($_POST['membernamecheckbox'] as $value)
     {
     $membernamestr .="Rankings.membername='";
     $membernamestr .= $value;
 	$membernamestr .= "' OR ";
+	$c_j++;
     }
   $membernamestr .= " 'False') ";
   }
-
-  $stmt = mysqli_prepare($con,"SELECT (SUM(Rankings.rank)) AS \"TotalRank\", Rankings.gamename FROM Rankings WHERE Rankings.numberofplayers=2 AND Rankings.rank!=0".$membernamestr." GROUP BY Rankings.gamename ORDER BY Rankings.rank");
+  if ($c_j<2)
+    {
+    $c_j=2;
+    }
+  $stmt = mysqli_prepare($con,"SELECT (SUM(Rankings.rank)) AS \"TotalRank\", Rankings.gamename FROM Rankings WHERE Rankings.numberofplayers=".$c_j." AND Rankings.rank!=0".$membernamestr." GROUP BY Rankings.gamename ORDER BY Rankings.rank");
   mysqli_stmt_execute($stmt);
     
   mysqli_stmt_bind_result($stmt,$col1,$col2);
