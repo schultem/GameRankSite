@@ -74,123 +74,153 @@ if (mysqli_connect_errno())
   echo "Failed to connect to MySQL: " . mysqli_connect_error();
   }
   
-if(isset($_GET["data"]) and isset($_GET["playerstable"]))
-{
-  //rank
-  $newrank=$_POST["newrank"];
-  
-  $oldrank_stmt=mysqli_prepare($con,"SELECT membername,gamename,numberofplayers,rank FROM Rankings WHERE membername=? AND gamename=? AND numberofplayers=?");
-  mysqli_stmt_bind_param($oldrank_stmt,'ssi',$_GET["data"],$_POST["gamenametorank"],$_GET["playerstable"]);
-  mysqli_stmt_execute($oldrank_stmt);
-  mysqli_stmt_bind_result($oldrank_stmt,$col1,$col2,$col3,$col4);
-  $oldrank_row=mysqli_stmt_fetch($oldrank_stmt);
-  $oldrank=$col4;
-  mysqli_stmt_close($oldrank_stmt);
+$number_of_rated_games_result = mysqli_query($con,"SELECT MAX(rank) FROM Rankings WHERE membername='". $_GET["data"] ."' AND numberofplayers='".$_GET['playerstable']."'");
+$number_of_rated_games        = mysqli_fetch_array($number_of_rated_games_result);
 
-  if ($oldrank==0)
+if ($_POST["newrank"]>=1 and $_POST["newrank"]<=($number_of_rated_games['MAX(rank)']+1))
+  {
+  if(isset($_GET["data"]) and isset($_GET["playerstable"]))
     {
-    $currentrank_stmt=mysqli_prepare($con,"SELECT membername,gamename,numberofplayers,rank FROM Rankings WHERE membername=? AND numberofplayers=?");
-    mysqli_stmt_bind_param($currentrank_stmt,'si',$_GET["data"],$_GET["playerstable"]);
-    mysqli_stmt_execute($currentrank_stmt);
-    mysqli_stmt_bind_result($currentrank_stmt,$col1,$col2,$col3,$col4);
-	$result=array();
-    while(mysqli_stmt_fetch($currentrank_stmt))
-      {
-	    if ($col4!=0)
-		  {
-	      $result[]= $col1;
-	      $result[]= $col2;
-	      $result[]= $col3;
-	      $result[]= $col4;
-		  }
-	  }
-    mysqli_stmt_close($currentrank_stmt);
+    //rank
+    $newrank=$_POST["newrank"];
     
-	for($c_i=0;$c_i<sizeof($result);$c_i=$c_i+4)
+    $oldrank_stmt=mysqli_prepare($con,"SELECT membername,gamename,numberofplayers,rank FROM Rankings WHERE membername=? AND gamename=? AND numberofplayers=?");
+    mysqli_stmt_bind_param($oldrank_stmt,'ssi',$_GET["data"],$_POST["gamenametorank"],$_GET["playerstable"]);
+    mysqli_stmt_execute($oldrank_stmt);
+    mysqli_stmt_bind_result($oldrank_stmt,$col1,$col2,$col3,$col4);
+    $oldrank_row=mysqli_stmt_fetch($oldrank_stmt);
+    $oldrank=$col4;
+    mysqli_stmt_close($oldrank_stmt);
+  
+    if ($oldrank==0)
+      {
+      $currentrank_stmt=mysqli_prepare($con,"SELECT membername,gamename,numberofplayers,rank FROM Rankings WHERE membername=? AND numberofplayers=?");
+      mysqli_stmt_bind_param($currentrank_stmt,'si',$_GET["data"],$_GET["playerstable"]);
+      mysqli_stmt_execute($currentrank_stmt);
+      mysqli_stmt_bind_result($currentrank_stmt,$col1,$col2,$col3,$col4);
+  	$result=array();
+      while(mysqli_stmt_fetch($currentrank_stmt))
+        {
+  	    if ($col4!=0)
+  		  {
+  	      $result[]= $col1;
+  	      $result[]= $col2;
+  	      $result[]= $col3;
+  	      $result[]= $col4;
+  		  }
+  	  }
+      mysqli_stmt_close($currentrank_stmt);
+      
+  	for($c_i=0;$c_i<sizeof($result);$c_i=$c_i+4)
+  	  {
+  	  if ($result[$c_i+3]>=$newrank)
+  	    {
+  	    mysqli_query($con,"UPDATE Rankings SET rank='". ($result[$c_i+3]+1) ."' WHERE membername='". $result[$c_i] ."' AND gamename='". $result[$c_i+1] ."' AND numberofplayers='". $result[$c_i+2] ."'");
+  	    }
+  	  }
+  
+      $newrank_stmt=mysqli_prepare($con,"UPDATE Rankings SET rank='". $newrank ."' WHERE membername=? AND gamename='".$_POST['gamenametorank']."' AND numberofplayers=?");
+      mysqli_stmt_bind_param($newrank_stmt,'si',$_GET['data'],$_GET['playerstable']);
+      mysqli_stmt_execute($newrank_stmt);
+      mysqli_stmt_close($newrank_stmt);
+      }
+    elseif ($newrank>$oldrank)
 	  {
-	  if ($result[$c_i+3]>=$newrank)
+	  if($newrank<=$number_of_rated_games['MAX(rank)'])
 	    {
-	    mysqli_query($con,"UPDATE Rankings SET rank='". ($result[$c_i+3]+1) ."' WHERE membername='". $result[$c_i] ."' AND gamename='". $result[$c_i+1] ."' AND numberofplayers='". $result[$c_i+2] ."'");
+        $currentrank_stmt=mysqli_prepare($con,"SELECT membername,gamename,numberofplayers,rank FROM Rankings WHERE membername=? AND numberofplayers=?");
+        mysqli_stmt_bind_param($currentrank_stmt,'si',$_GET["data"],$_GET["playerstable"]);
+        mysqli_stmt_execute($currentrank_stmt);
+        mysqli_stmt_bind_result($currentrank_stmt,$col1,$col2,$col3,$col4);
+  	    $result=array();
+        while(mysqli_stmt_fetch($currentrank_stmt))
+          {
+  	      if ($col4!=0)
+  		    {
+  	        $result[]= $col1;
+  	        $result[]= $col2;
+  	        $result[]= $col3;
+  	        $result[]= $col4;
+  		    }
+  	    }
+        mysqli_stmt_close($currentrank_stmt);
+        
+        for($c_i=0;$c_i<sizeof($result);$c_i=$c_i+4)
+  	    {
+  	    if ($result[$c_i+3]>$oldrank and $result[$c_i+3]<=$newrank)
+  	      {
+  	      mysqli_query($con,"UPDATE Rankings SET rank='". ($result[$c_i+3]-1) ."' WHERE membername='". $result[$c_i] ."' AND gamename='". $result[$c_i+1] ."' AND numberofplayers='". $result[$c_i+2] ."'");
+  	      }
+  	    }
+        
+        $newrank_stmt=mysqli_prepare($con,"UPDATE Rankings SET rank='". $newrank ."' WHERE membername=? AND gamename=? AND numberofplayers=?");
+        mysqli_stmt_bind_param($newrank_stmt,'ssi',$_GET["data"],$_POST["gamenametorank"],$_GET["playerstable"]);
+        mysqli_stmt_execute($newrank_stmt);
+        mysqli_stmt_close($newrank_stmt);
+  	    }
+	  else
+	    {
+        echo "<div style=\"color:red\">";
+        echo "Error: Number must be between 1 and ". ($number_of_rated_games['MAX(rank)']) ."";
+        echo "</div>";
 	    }
 	  }
-
-    $newrank_stmt=mysqli_prepare($con,"UPDATE Rankings SET rank='". $newrank ."' WHERE membername=? AND gamename='".$_POST['gamenametorank']."' AND numberofplayers=?");
-    mysqli_stmt_bind_param($newrank_stmt,'si',$_GET['data'],$_GET['playerstable']);
-    mysqli_stmt_execute($newrank_stmt);
-    mysqli_stmt_close($newrank_stmt);
+    elseif ($newrank<$oldrank)
+	  {
+	  if($newrank<=$number_of_rated_games['MAX(rank)'])
+	    {
+        $currentrank_stmt=mysqli_prepare($con,"SELECT membername,gamename,numberofplayers,rank FROM Rankings WHERE membername=? AND numberofplayers=?");
+        mysqli_stmt_bind_param($currentrank_stmt,'si',$_GET["data"],$_GET["playerstable"]);
+        mysqli_stmt_execute($currentrank_stmt);
+        mysqli_stmt_bind_result($currentrank_stmt,$col1,$col2,$col3,$col4);
+  	    $result=array();
+        while(mysqli_stmt_fetch($currentrank_stmt))
+          {
+  	      if ($col4!=0)
+  		    {
+  	        $result[]= $col1;
+  	        $result[]= $col2;
+  	        $result[]= $col3;
+  	        $result[]= $col4;
+  		    }
+  	    }
+        mysqli_stmt_close($currentrank_stmt);
+        
+        for($c_i=0;$c_i<sizeof($result);$c_i=$c_i+4)
+  	    {
+  	    if ($result[$c_i+3]>=$newrank and $result[$c_i+3]<$oldrank)
+  	      {
+  	      mysqli_query($con,"UPDATE Rankings SET rank='". ($result[$c_i+3]+1) ."' WHERE membername='". $result[$c_i] ."' AND gamename='". $result[$c_i+1] ."' AND numberofplayers='". $result[$c_i+2] ."'");
+  	      }
+  	    }
+        
+        $newrank_stmt=mysqli_prepare($con,"UPDATE Rankings SET rank='". $newrank ."' WHERE membername=? AND gamename=? AND numberofplayers=?");
+        mysqli_stmt_bind_param($newrank_stmt,'ssi',$_GET["data"],$_POST["gamenametorank"],$_GET["playerstable"]);
+        mysqli_stmt_execute($newrank_stmt);
+        mysqli_stmt_close($newrank_stmt);
+  	    }
+	  else
+	    {
+        echo "<div style=\"color:red\">";
+        echo "Error: Number must be between 1 and ". ($number_of_rated_games['MAX(rank)']) ."";
+        echo "</div>";
+	    }
+      }
+    else
+      {
+      echo "<div style=\"color:red\">";
+      echo "Error: Entered the page without member and number of players information";
+      echo "</div>";
+      $error=1;
+      }
     }
-  elseif ($newrank>$oldrank)
-    {
-    $currentrank_stmt=mysqli_prepare($con,"SELECT membername,gamename,numberofplayers,rank FROM Rankings WHERE membername=? AND numberofplayers=?");
-    mysqli_stmt_bind_param($currentrank_stmt,'si',$_GET["data"],$_GET["playerstable"]);
-    mysqli_stmt_execute($currentrank_stmt);
-    mysqli_stmt_bind_result($currentrank_stmt,$col1,$col2,$col3,$col4);
-	$result=array();
-    while(mysqli_stmt_fetch($currentrank_stmt))
-      {
-	    if ($col4!=0)
-		  {
-	      $result[]= $col1;
-	      $result[]= $col2;
-	      $result[]= $col3;
-	      $result[]= $col4;
-		  }
-	  }
-    mysqli_stmt_close($currentrank_stmt);
-
-    for($c_i=0;$c_i<sizeof($result);$c_i=$c_i+4)
-	  {
-	  if ($result[$c_i+3]>$oldrank and $result[$c_i+3]<=$newrank)
-	    {
-	    mysqli_query($con,"UPDATE Rankings SET rank='". ($result[$c_i+3]-1) ."' WHERE membername='". $result[$c_i] ."' AND gamename='". $result[$c_i+1] ."' AND numberofplayers='". $result[$c_i+2] ."'");
-	    }
-	  }
-
-    $newrank_stmt=mysqli_prepare($con,"UPDATE Rankings SET rank='". $newrank ."' WHERE membername=? AND gamename=? AND numberofplayers=?");
-    mysqli_stmt_bind_param($newrank_stmt,'ssi',$_GET["data"],$_POST["gamenametorank"],$_GET["playerstable"]);
-    mysqli_stmt_execute($newrank_stmt);
-    mysqli_stmt_close($newrank_stmt);
-	}
-  elseif ($newrank<$oldrank)
-    {
-    $currentrank_stmt=mysqli_prepare($con,"SELECT membername,gamename,numberofplayers,rank FROM Rankings WHERE membername=? AND numberofplayers=?");
-    mysqli_stmt_bind_param($currentrank_stmt,'si',$_GET["data"],$_GET["playerstable"]);
-    mysqli_stmt_execute($currentrank_stmt);
-    mysqli_stmt_bind_result($currentrank_stmt,$col1,$col2,$col3,$col4);
-	$result=array();
-    while(mysqli_stmt_fetch($currentrank_stmt))
-      {
-	    if ($col4!=0)
-		  {
-	      $result[]= $col1;
-	      $result[]= $col2;
-	      $result[]= $col3;
-	      $result[]= $col4;
-		  }
-	  }
-    mysqli_stmt_close($currentrank_stmt);
-
-    for($c_i=0;$c_i<sizeof($result);$c_i=$c_i+4)
-	  {
-	  if ($result[$c_i+3]>=$newrank and $result[$c_i+3]<$oldrank)
-	    {
-	    mysqli_query($con,"UPDATE Rankings SET rank='". ($result[$c_i+3]+1) ."' WHERE membername='". $result[$c_i] ."' AND gamename='". $result[$c_i+1] ."' AND numberofplayers='". $result[$c_i+2] ."'");
-	    }
-	  }
-
-    $newrank_stmt=mysqli_prepare($con,"UPDATE Rankings SET rank='". $newrank ."' WHERE membername=? AND gamename=? AND numberofplayers=?");
-    mysqli_stmt_bind_param($newrank_stmt,'ssi',$_GET["data"],$_POST["gamenametorank"],$_GET["playerstable"]);
-    mysqli_stmt_execute($newrank_stmt);
-    mysqli_stmt_close($newrank_stmt);
-	}
-}
+  }
 else
-{
-    echo "<div style=\"color:red\">";
-    echo "Error: Entered the page without member and number of players information";
-    echo "</div>";
-	$error=1;
-}
+  {
+  echo "<div style=\"color:red\">";
+  echo "Error: Number must be between 1 and ". ($number_of_rated_games['MAX(rank)']) ."";
+  echo "</div>";
+  }
 
 ?>
 
@@ -221,7 +251,7 @@ else
     echo "</div>";
 	$error=1;
 }
-echo "Enter your preferences for ".$_GET["playerstable"]." player games:<br><br>";
+echo "Enter your preferences for ".$_GET["playerstable"]." player games, <b>one at a time</b>:<br><br>";
 echo "<table width=\"50%\" border=\"1\">
 <tr>
 <td><b>New Rank       </b></td>

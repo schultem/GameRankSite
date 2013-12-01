@@ -142,7 +142,7 @@ else
     echo "</div>";
 	$error=1;
 }
-echo "Enter your preferences for ".$_GET["playerstable"]." player games:<br><br>";
+echo "Enter your preferences for ".$_GET["playerstable"]." player games, <b>one at a time</b>:<br><br>";
 echo "<table width=\"50%\" border=\"1\">
 <tr>
 <td><b>New Rank       </b></td>
