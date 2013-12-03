@@ -80,7 +80,7 @@ else
 		echo "<legend><b>Add Game</b></legend>";
 		echo "Name:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"text\" name=\"name\"><br>";
         echo "Max players:<input type=\"number\" name=\"numberofplayers\" min=\"2\" max=\"16\">";
-        echo "<input type=\"submit\" style=\"position: absolute; left: -9999px\"/>";
+        echo "<input type=\"submit\" value=\"Add\"/>";
         echo "</fieldset>";
 		echo "</form>";
     }
@@ -143,7 +143,7 @@ else
 	$error=1;
 }
 echo "Enter your preferences for ".$_GET["playerstable"]." player games, <b>one at a time</b>:<br><br>";
-echo "<table width=\"50%\" border=\"1\">
+echo "<table width=\"60%\" border=\"1\">
 <tr>
 <td><b>New Rank       </b></td>
 <td><b>Unranked Games </b></td>
@@ -162,7 +162,7 @@ if (!$error)
             echo "<form action=\"rank_game.php?data=". $_GET["data"] ."&playerstable=". $_GET["playerstable"] ."\" method=\"post\" size=\"5\" >";
             echo "<input type=\"hidden\" name=\"gamenametorank\" value='". $col2 ."'>";
 			echo "<input type=\"number\" name=\"newrank\" size=\"5\" min=\"1\" max=\"". ($number_of_rated_games['MAX(rank)']+1) ."\" >";
-            echo "<input type=\"submit\" style=\"position: absolute; left: -9999px\"/>";
+            echo "<input type=\"submit\" value=\"Submit\"/>";
 			echo "</form>";
             echo "</td>";
             echo "<td>" . $col2 . "</td>";
@@ -199,7 +199,7 @@ else
 }
 echo "</br>";
 echo "</br>";
-echo "<table width=\"50%\" border=\"1\">
+echo "<table width=\"60%\" border=\"1\">
 <tr>
 <td><b>Rank   </b></td>
 <td><b>New Rank   </b></td>
@@ -219,7 +219,7 @@ if (!$error)
             echo "<form action=\"rank_game.php?data=". $_GET["data"] ."&playerstable=". $_GET["playerstable"] ."\" method=\"post\" size=\"5\" >";
             echo "<input type=\"hidden\" name=\"gamenametorank\" value='". $col2 ."'>";
 			echo "<input type=\"number\" name=\"newrank\" size=\"5\" min=\"1\" max=\"". ($number_of_rated_games['MAX(rank)']) ."\" >";
-            echo "<input type=\"submit\" style=\"position: absolute; left: -9999px\"/>";
+            echo "<input type=\"submit\" value=\"Submit\"/>";
 			echo "</form>";
             echo "</td>";
             echo "<td>" . $col2 . "</td>";
